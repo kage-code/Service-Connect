@@ -8,8 +8,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .serializers import RegisterSerializer
 from .models import CustomUser
+
 import random
 from django.core.mail import send_mail
+from django.core.cache import cache
+
+from .tasks import send_otp_email
+
 
 # LOGIN SERIALIZER
 class LoginSerializer(TokenObtainPairSerializer):
@@ -23,32 +28,25 @@ class LoginView(TokenObtainPairView):
 
 
 # REGISTER VIEW
-import random
-
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+
         serializer = RegisterSerializer(data=request.data)
 
         if serializer.is_valid():
             user = serializer.save()
 
-            # Generate OTP
-            otp = str(random.randint(100000, 999999))
-
-            # Save OTP
-            user.otp = otp
-            user.save()
+            # send OTP via celery
+            send_otp_email.delay(user.email)
 
             return Response(
-                {
-                    "message": "User registered successfully.",
-                    "OTP_Code": otp
-                },
+                {"message": "User registered successfully. OTP sent to email"},
                 status=status.HTTP_201_CREATED
             )
 
+        # 🔴 THIS LINE FIXES YOUR 500 ERROR
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -57,23 +55,25 @@ class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+
         email = request.data.get("email")
         otp = request.data.get("otp")
 
-        try:
-            user = CustomUser.objects.get(email=email)
+        stored_otp = cache.get(email)
 
-            if user.otp == otp:
-                user.is_verified = True
-                user.otp = None
-                user.save()
+        if stored_otp is None:
+            return Response({"error": "OTP expired"}, status=400)
 
-                return Response({"message": "Email verified successfully"})
-
+        if stored_otp != otp:
             return Response({"error": "Invalid OTP"}, status=400)
 
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
+        cache.delete(email)
+
+        user = CustomUser.objects.get(email=email)
+        user.is_verified = True
+        user.save()
+
+        return Response({"message": "Email verified successfully"})
 
 
 # PROFILE VIEW (PROTECTED)
@@ -86,13 +86,14 @@ class ProfileView(APIView):
             "full_name": request.user.full_name,
             "role": request.user.role
         })
-    
 
-#forget password view
+
+# FORGOT PASSWORD VIEW
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+
         email = request.data.get("email")
 
         try:
@@ -102,7 +103,6 @@ class ForgotPasswordView(APIView):
             user.otp = otp
             user.save()
 
-            # send OTP email
             send_mail(
                 "Password Reset OTP",
                 f"Your OTP is {otp}",
@@ -113,17 +113,19 @@ class ForgotPasswordView(APIView):
 
             return Response({
                 "message": "OTP sent to email",
-                "OTP_Code": otp   # keep this only for testing
+                "OTP_Code": otp
             })
 
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
 
- #reset password view       
+
+# RESET PASSWORD VIEW
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+
         email = request.data.get("email")
         otp = request.data.get("otp")
         new_password = request.data.get("new_password")
