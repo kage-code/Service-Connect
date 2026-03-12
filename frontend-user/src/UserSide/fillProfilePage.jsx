@@ -46,7 +46,7 @@ export default function FillProfile() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-      <CommonHeader title="FILL YOUR PROFILE"/>
+      <CommonHeader title="FILL YOUR PROFILE" />
 
       {/* Profile Avatar */}
       <div className="flex flex-col items-center mt-6">
@@ -84,7 +84,7 @@ export default function FillProfile() {
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="flex justify-center mt-6 px-4 flex-grow overflow-y-auto"
+        className="flex justify-center mt-6 px-4 grow overflow-y-auto"
       >
         <div className="w-full max-w-lg flex flex-col gap-3 pb-6">
           <Input placeholder="Full Name" value={form.fullName} onChange={handleChange("fullName")} />
