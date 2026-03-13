@@ -4,6 +4,7 @@ from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
+
     def create_user(self, email, full_name, password=None, role='client'):
         if not email:
             raise ValueError("Email is required")
@@ -16,7 +17,7 @@ class CustomUserManager(BaseUserManager):
             role=role,
         )
 
-        user.set_password(password)  # hashes password
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
@@ -27,10 +28,12 @@ class CustomUserManager(BaseUserManager):
             password=password,
             role='admin'
         )
+
         user.is_staff = True
         user.is_superuser = True
         user.is_active = True
         user.save(using=self._db)
+
         return user
 
 
@@ -41,17 +44,23 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('provider', 'Provider'),
         ('admin', 'Admin'),
     )
-    otp = models.CharField(max_length=6, blank=True, null=True)
-    is_verified = models.BooleanField(default=False)
 
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client')
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='client'
+    )
+
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     objects = CustomUserManager()
 
@@ -61,24 +70,90 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+
 class UserProfile(models.Model):
 
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
 
-    address = models.TextField(blank=True)
-    dob = models.DateField(null=True, blank=True)
+    # basic info
+    full_name = models.CharField(max_length=255)
+    address = models.TextField(blank=True, null=True)
+    dob = models.DateField(blank=True, null=True)
 
-    phone = models.CharField(max_length=15, blank=True)
-    gender = models.CharField(max_length=10, blank=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
 
-    house_name = models.CharField(max_length=255, blank=True)
-    landmark = models.CharField(max_length=255, blank=True)
+    GENDER_CHOICES = (
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+    )
 
-    pincode = models.CharField(max_length=10, blank=True)
-    district = models.CharField(max_length=100, blank=True)
-    state = models.CharField(max_length=100, blank=True)
+    gender = models.CharField(
+        max_length=10,
+        choices=GENDER_CHOICES,
+        blank=True,
+        null=True
+    )
 
-    profile_image = models.ImageField(upload_to="profiles/", null=True, blank=True)
+    # address info
+    house_name = models.CharField(max_length=255, blank=True, null=True)
+    landmark = models.CharField(max_length=255, blank=True, null=True)
+
+    pincode = models.CharField(max_length=10, blank=True, null=True)
+    district = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+
+    # profile image
+    profile_image = models.ImageField(
+        upload_to="profiles/",
+        null=True,
+        blank=True
+    )
+
+    # address proof
+    ADDRESS_PROOF_CHOICES = (
+        ('aadhaar', 'Aadhaar'),
+        ('passport', 'Passport'),
+        ('driving_license', 'Driving License'),
+        ('voter_id', 'Voter ID'),
+    )
+
+    address_proof_type = models.CharField(
+        max_length=50,
+        choices=ADDRESS_PROOF_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    id_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    address_proof_document = models.FileField(
+        upload_to="documents/",
+        blank=True,
+        null=True
+    )
+
+    # payout settings
+    PAYOUT_CHOICES = (
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    )
+
+    payout_required = models.CharField(
+        max_length=20,
+        choices=PAYOUT_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    terms_accepted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.user.email
