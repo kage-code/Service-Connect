@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, Category  # Added Category import
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -17,3 +17,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'client')
         )
         return user
+
+
+# --- NEW SERIALIZER ADDED BELOW ---
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'icon', 'route']
