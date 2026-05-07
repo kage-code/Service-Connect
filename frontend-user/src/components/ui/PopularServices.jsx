@@ -57,10 +57,9 @@ export default function PopularServicesSlider({ services = [] }) {
             key={filter}
             onClick={() => setActiveFilter(filter)}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
-              ${
-                activeFilter === filter
-                  ? "bg-[#1D1F2A] text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ${activeFilter === filter
+                ? "bg-[#1D1F2A] text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
           >
             {filter}
@@ -87,7 +86,7 @@ export default function PopularServicesSlider({ services = [] }) {
             <p className="text-xs text-gray-500">Plumbing</p>
             <h4 className="font-semibold text-sm leading-tight">
               {service.title}
-              <div><bisolidbookmark/>n  </div>
+              <div><BiSolidBookmarkMinus /></div>
             </h4>
 
             <div className="flex justify-between items-center mt-1 text-xs">

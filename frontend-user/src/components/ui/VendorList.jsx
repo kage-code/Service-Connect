@@ -1,37 +1,44 @@
 import React from "react";
 import { BiSolidBookmarkMinus, BiBookmarkMinus } from "react-icons/bi";
+import { useNavigate } from "react-router-dom";
+
 export default function VendorList({ vendors, onBookmarkToggle }) {
+  const navigate = useNavigate();
+
   return (
     <div className="px-4 mt-5 space-y-4">
       {vendors.map((v) => (
         <div
           key={v.id}
-          className="relative bg-white rounded-2xl shadow-md flex p-3 items-center space-x-3 hover:shadow-lg transition-all"
+          onClick={() => navigate(`/profile/${v.providerId}`)}
+          className="relative bg-white rounded-2xl shadow-md flex p-3 items-center space-x-3 hover:shadow-lg transition-all cursor-pointer"
         >
           {/* Bookmark button (top-right) */}
           <button
             aria-label={v.bookmarked ? "Remove bookmark" : "Add bookmark"}
             className="absolute right-3 top-3 p-1 rounded-full hover:bg-gray-100"
-            onClick={() => onBookmarkToggle?.(v.id)}
+            onClick={(e) => {
+              e.stopPropagation();  // prevent navigating when clicking bookmark
+              onBookmarkToggle?.(v.id);
+            }}
           >
             {v.bookmarked ? (
               <BiSolidBookmarkMinus />
             ) : (
-              <BiBookmarkMinus/>
+              <BiBookmarkMinus />
             )}
           </button>
 
           {/* Placeholder image */}
           {v.image ? (
-  <img
-    src={v.image}
-    alt={v.name}
-    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-  />
-    ) : (
-  <div className="w-16 h-16 bg-gray-300 rounded-lg flex-shrink-0" />
-        )}
-
+            <img
+              src={v.image}
+              alt={v.name}
+              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gray-300 rounded-lg flex-shrink-0" />
+          )}
 
           {/* Vendor Info */}
           <div className="flex-1">

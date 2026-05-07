@@ -1,6 +1,5 @@
 import React from "react";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { IoIosArrowDropleft } from "react-icons/io";
 import TextInput from "../components/ui/request_service/TextInput";
 import MediaUpload from "../components/ui/request_service/MediaUpload";
@@ -9,6 +8,8 @@ import SubmitButton from "../components/ui/SubmitButton";
 
 export default function RequestServicePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { providerName, serviceType } = location.state || {};
 
   return (
     <div className="min-h-screen bg-[#D9D9DB] flex flex-col">
@@ -28,18 +29,18 @@ export default function RequestServicePage() {
       {/* Scrollable Body */}
       <div className="flex-1 overflow-y-auto pb-32">
         <div className="max-w-3xl mx-auto px-4 mt-6 space-y-5">
-          {/* User Info Card */}
+          {/* Provider Info Card */}
           <div className="bg-[#D9D9DB] rounded-2xl p-4 flex items-center space-x-3">
             <img
               src="https://randomuser.me/api/portraits/men/40.jpg"
-              alt="Nazrul Islam"
+              alt={providerName}
               className="w-12 h-12 rounded-full object-cover"
             />
             <div>
               <h3 className="text-sm font-semibold text-gray-900">
-                Nazrul Islam
+                {providerName || "Provider"}
               </h3>
-              <p className="text-xs text-gray-600">Electrification ⚡</p>
+              <p className="text-xs text-gray-600">{serviceType || "Service"}</p>
             </div>
           </div>
 

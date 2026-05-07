@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import SubmitButton from "./SubmitButton";
 import { useNavigate } from "react-router-dom";
 
-
-
 export default function FilterComponent() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
@@ -35,7 +33,22 @@ export default function FilterComponent() {
   };
 
   const handleApply = () => {
-    console.log("Applied filters:", filters);
+    const params = new URLSearchParams();
+
+    if (filters.price[0]) params.append("price", "paid");
+    if (filters.price[1]) params.append("price", "free");
+
+    const ratingValues = ["1", "2", "3", "4"];
+    filters.rating.forEach((checked, i) => {
+      if (checked) params.append("rating", ratingValues[i]);
+    });
+
+    const durationValues = ["0-1", "1-3", "3-5", "full"];
+    filters.duration.forEach((checked, i) => {
+      if (checked) params.append("duration", durationValues[i]);
+    });
+
+    navigate(`/servicepage?${params.toString()}`);
   };
 
   const renderSection = (title, key, options) => (
@@ -62,8 +75,7 @@ export default function FilterComponent() {
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <button className="text-gray-700"
-          onClick={() => navigate(-1)}>
+          <button className="text-gray-700" onClick={() => navigate(-1)}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-5 h-5"

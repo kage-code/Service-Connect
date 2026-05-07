@@ -8,7 +8,6 @@ export default function AllCategoriesGrid() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // UPDATED: Added /api/ to match your project's urls.py
     axios.get("http://127.0.0.1:8000/api/categories/")
       .then((res) => {
         setCategories(res.data);
@@ -20,8 +19,12 @@ export default function AllCategoriesGrid() {
       });
   }, []);
 
-  const handleClick = (route) => {
-    if (route) navigate(route);
+  const handleClick = (cat) => {
+    if (cat.subcategories && cat.subcategories.length > 0) {
+      navigate(`/subcategories/${cat.id}`);
+    } else if (cat.route) {
+      navigate(cat.route);
+    }
   };
 
   if (loading) {
@@ -37,9 +40,8 @@ export default function AllCategoriesGrid() {
       {categories.map((cat) => (
         <div
           key={cat.id}
-          onClick={() => handleClick(cat.route)}
-          className={`bg-white shadow-md rounded-2xl flex flex-col items-center justify-center p-4 aspect-square hover:shadow-lg transition-all cursor-pointer ${cat.route ? "active:scale-95" : ""
-            }`}
+          onClick={() => handleClick(cat)}
+          className={`bg-white shadow-md rounded-2xl flex flex-col items-center justify-center p-4 aspect-square hover:shadow-lg transition-all cursor-pointer ${cat.route ? "active:scale-95" : ""}`}
         >
           <img
             src={cat.icon}

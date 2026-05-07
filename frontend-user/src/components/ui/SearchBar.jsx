@@ -8,12 +8,7 @@ import { useNavigate } from "react-router-dom";
  * - placeholder: text inside the input
  * - onChange: callback when user types
  */
-export default function SearchBar({
-  placeholder = "Search for..",
-  onChange,
-}) {
-  const navigate = useNavigate();
-
+export default function SearchBar({ placeholder = "Search for..", onChange, onKeyDown, value }) {
   return (
     <div className="flex justify-center mt-3">
       <div className="flex items-center gap-2 bg-[#736A68] rounded-xl shadow-sm p-2 justify-center max-w-8xl w-full mx-4">
@@ -22,6 +17,8 @@ export default function SearchBar({
           type="text"
           placeholder={placeholder}
           onChange={onChange}
+          onKeyDown={onKeyDown}
+          value={value}
           className="w-full outline-none text-sm placeholder-white text-white bg-transparent"
         />
         <FaSlidersH

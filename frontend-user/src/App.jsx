@@ -83,22 +83,22 @@ function App() {
       {/* --- Main User App Routes --- */}
       <Route path="/home" element={<Home />} />
       <Route path="/allcategory" element={<AllCategory />} />
-      <Route path="/allcategory/deliveryservice" element={<DeliveryService />} />
+      <Route path="/subcategories/:categoryId" element={<DeliveryService />} />
       <Route path="/allcategory/cakedelivery" element={<CakeDelivery />} />
       <Route path="/search" element={<SearchScreen />} />
       <Route path="/filterpage" element={<FilterComponent />} />
-      <Route path="/profilepage" element={<ProfilePage />} />
+      {/* <Route path="/profilepage" element={<ProfilePage />} /> */}
       <Route path="/requestservice" element={<RequestServiceForm />} />
       <Route path="/bookingpage" element={<BookingsPage />} />
-      <Route path="/bookingdetails" element={<BookingDetailsPage />} />
+      <Route path="/bookingdetails/:id" element={<BookingDetailsPage />} />
       <Route path="/paymentmethod" element={<PaymentMethodsPage />} />
       <Route path="/congratsstar" element={<Congratsstar />} />
-      <Route path="/ereceipt" element={<EReceiptPage />} />
+      <Route path="/ereceipt/:bookingId" element={<EReceiptPage />} />
       <Route path="/reviewupload" element={<ReviewUploadPage />} />
-      <Route path="/reviewpage" element={<ReviewsPage />} />
+      <Route path="/reviewpage/:providerId" element={<ReviewsPage />} />
       <Route path="/addcard" element={<AddCardPage />} />
       <Route path="/job" element={<JobPage />} />
-      <Route path="/servicedetail" element={<ServiceDetails />} />
+      <Route path="/servicedetail/:id" element={<ServiceDetails />} />
       <Route path="/complaintform" element={<ComplaintForm />} />
       <Route path="/complaintpage" element={<ComplaintPage />} />
       <Route path="/servicecomplete" element={<ServiceComplete />} />
@@ -116,6 +116,7 @@ function App() {
       <Route path="/chatcall" element={<ChatPage />} />
       <Route path="/message" element={<MessagePage />} />
       <Route path="/invite" element={<InviteFriend />} />
+      <Route path="/profile/:providerId" element={<ProfilePage />} />
 
       {/* --- Admin Routes --- */}
       <Route path="/admin/generalsettings" element={<AdminGeneralSettings />} />
