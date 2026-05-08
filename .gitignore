@@ -1,0 +1,33 @@
+# ===== DATABASE =====
+db.sqlite3
+*.sqlite3
+
+# ===== PYTHON =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ===== ENVIRONMENT =====
+.env
+.env.*
+*.env
+
+# ===== VIRTUAL ENVIRONMENT =====
+venv/
+env/
+jango/
+
+# ===== DJANGO =====
+media/
+staticfiles/
+*.log
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== FRONTEND (root level) =====
+frontend-user/node_modules/
+frontend-user/dist/
