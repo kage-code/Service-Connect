@@ -1,3 +1,4 @@
+# accounts/signals.py
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import CustomUser, UserProfile, ProviderProfile
@@ -5,11 +6,6 @@ from .models import CustomUser, UserProfile, ProviderProfile
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
+        UserProfile.objects.get_or_create(user=instance)
         if instance.role == 'provider':
-            ProviderProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=CustomUser)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
+            ProviderProfile.objects.get_or_create(user=instance)

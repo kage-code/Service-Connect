@@ -1,84 +1,129 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.db import models as django_models
-
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer# Added CategorySerializer
-from .models import CustomUser, Category, Service # Added Category model
-import random
+from django.db import models as django_models
 from django.core.mail import send_mail
-from .models import CustomUser, Category, Service, ProviderProfile
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer, ProviderProfileSerializer
 
-# LOGIN SERIALIZER
+from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review, Card, Complaint, UserProfile
+from .serializers import (
+    RegisterSerializer,
+    CategorySerializer,
+    ServiceSerializer,
+    ProviderProfileSerializer,
+    BookingSerializer,
+    ReviewSerializer,
+    CardSerializer,
+    ComplaintSerializer,
+    UserProfileSerializer,
+)
+import random
+
+
+# ─── AUTH ───────────────────────────────────────────────────────────────────
+
 class LoginSerializer(TokenObtainPairSerializer):
     username_field = 'email'
 
 
-# LOGIN VIEW
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
 
 
-# REGISTER VIEW
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
-
         if serializer.is_valid():
             user = serializer.save()
-
-            # Generate OTP
-            otp = str(random.randint(100000, 999999))
-
-            # Save OTP
+            otp = str(random.randint(1000, 9999))
             user.otp = otp
             user.save()
-
             return Response(
-                {
-                    "message": "User registered successfully.",
-                    "OTP_Code": otp
-                },
+                {"message": "User registered successfully.", "OTP_Code": otp},
                 status=status.HTTP_201_CREATED
             )
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# VERIFY OTP VIEW
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         email = request.data.get("email")
         otp = request.data.get("otp")
-
         try:
             user = CustomUser.objects.get(email=email)
-
             if user.otp == otp:
                 user.is_verified = True
                 user.otp = None
                 user.save()
-
                 return Response({"message": "Email verified successfully"})
-
             return Response({"error": "Invalid OTP"}, status=400)
-
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
 
 
-# PROFILE VIEW (PROTECTED)
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        try:
+            user = CustomUser.objects.get(email=email)
+            otp = str(random.randint(1000, 9999))
+            user.otp = otp
+            user.save()
+            send_mail(
+                "Password Reset OTP",
+                f"Your OTP is {otp}",
+                "yourgmail@gmail.com",
+                [email],
+                fail_silently=False,
+            )
+            return Response({"message": "OTP sent to email", "OTP_Code": otp})  # remove OTP_Code in production
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+
+@api_view(['POST'])
+def verify_reset_otp(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+    try:
+        user = CustomUser.objects.get(email=email)
+    except CustomUser.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=404)
+    if user.otp != otp:
+        return Response({'error': 'Invalid OTP.'}, status=400)
+    return Response({'message': 'OTP verified.'})
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        otp = request.data.get("otp")
+        new_password = request.data.get("new_password")
+        try:
+            user = CustomUser.objects.get(email=email)
+            if user.otp == otp:
+                user.set_password(new_password)
+                user.otp = None
+                user.save()
+                return Response({"message": "Password reset successful"})
+            return Response({"error": "Invalid OTP"}, status=400)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+
 class ProfileView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -89,81 +134,20 @@ class ProfileView(APIView):
             "full_name": request.user.full_name,
             "role": request.user.role
         })
-    
 
-#forget password view
-class ForgotPasswordView(APIView):
-    permission_classes = [AllowAny]
 
-    def post(self, request):
-        email = request.data.get("email")
-
-        try:
-            user = CustomUser.objects.get(email=email)
-
-            otp = str(random.randint(100000, 999999))
-            user.otp = otp
-            user.save()
-
-            # send OTP email
-            send_mail(
-                "Password Reset OTP",
-                f"Your OTP is {otp}",
-                "yourgmail@gmail.com",
-                [email],
-                fail_silently=False,
-            )
-
-            return Response({
-                "message": "OTP sent to email",
-                "OTP_Code": otp   # keep this only for testing
-            })
-
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-
- #reset password view        
-class ResetPasswordView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        email = request.data.get("email")
-        otp = request.data.get("otp")
-        new_password = request.data.get("new_password")
-
-        try:
-            user = CustomUser.objects.get(email=email)
-
-            if user.otp == otp:
-                user.set_password(new_password)
-                user.otp = None
-                user.save()
-
-                return Response({"message": "Password reset successful"})
-
-            return Response({"error": "Invalid OTP"}, status=400)
-
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-
-# --- NEW CATEGORY VIEW ADDED BELOW ---
+# ─── CATEGORIES ─────────────────────────────────────────────────────────────
 
 class CategoryListView(APIView):
-    """
-    Returns the list of categories for the React Grid.
-    Accessible via: http://127.0.0.1:8000/api/categories/
-    """
     permission_classes = [AllowAny]
 
     def get(self, request):
-        categories = Category.objects.filter(parent=None)  # 👈 only top-level
+        categories = Category.objects.filter(parent=None)
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-from .models import CustomUser, Category, Service
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer
 
-from django.db import models as django_models
+
+# ─── SERVICES ───────────────────────────────────────────────────────────────
 
 class ServiceListView(APIView):
     permission_classes = [AllowAny]
@@ -199,6 +183,9 @@ class ServiceListView(APIView):
         serializer = ServiceSerializer(services, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+# ─── PROVIDER ────────────────────────────────────────────────────────────────
+
 class ProviderProfileView(APIView):
     permission_classes = [AllowAny]
 
@@ -215,8 +202,8 @@ class ProviderProfileView(APIView):
         except ProviderProfile.DoesNotExist:
             return Response({"error": "Provider not found"}, status=status.HTTP_404_NOT_FOUND)
 
-from .models import CustomUser, Category, Service, ProviderProfile, Booking
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer, ProviderProfileSerializer, BookingSerializer
+
+# ─── BOOKINGS ────────────────────────────────────────────────────────────────
 
 class BookingListView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -235,6 +222,7 @@ class BookingListView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class BookingDetailView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -258,11 +246,9 @@ class BookingDetailView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Booking.DoesNotExist:
             return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
-        
 
-        
-from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer, ProviderProfileSerializer, BookingSerializer, ReviewSerializer
+
+# ─── REVIEWS ─────────────────────────────────────────────────────────────────
 
 class ReviewView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -277,6 +263,7 @@ class ReviewView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ProviderReviewsView(APIView):
     permission_classes = [AllowAny]
 
@@ -284,9 +271,9 @@ class ProviderReviewsView(APIView):
         reviews = Review.objects.filter(provider__id=provider_id).order_by('-created_at')
         serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review, Card
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer, ProviderProfileSerializer, BookingSerializer, ReviewSerializer, CardSerializer
+
+
+# ─── CARDS ───────────────────────────────────────────────────────────────────
 
 class CardView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -303,7 +290,10 @@ class CardView(APIView):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
+# ─── E-RECEIPT ───────────────────────────────────────────────────────────────
+
 class EReceiptView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -324,7 +314,10 @@ class EReceiptView(APIView):
             }, status=status.HTTP_200_OK)
         except Booking.DoesNotExist:
             return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
+
+# ─── JOBS (PROVIDER SIDE) ────────────────────────────────────────────────────
+
 class JobListView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -345,9 +338,9 @@ class JobListView(APIView):
 
         serializer = BookingSerializer(jobs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review, Card, Complaint
-from .serializers import RegisterSerializer, CategorySerializer, ServiceSerializer, ProviderProfileSerializer, BookingSerializer, ReviewSerializer, CardSerializer, ComplaintSerializer
+
+
+# ─── COMPLAINTS ──────────────────────────────────────────────────────────────
 
 class ComplaintView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -366,4 +359,50 @@ class ComplaintView(APIView):
         complaints = Complaint.objects.filter(client=request.user).order_by('-created_at')
         serializer = ComplaintSerializer(complaints, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ─── USER PROFILE ────────────────────────────────────────────────────────────
+
+class UserProfileView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        serializer = UserProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+class BookingDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, booking_id):
+        try:
+            # Allow both client and provider to fetch
+            booking = Booking.objects.get(
+                django_models.Q(id=booking_id) &
+                (django_models.Q(client=request.user) | django_models.Q(provider__user=request.user))
+            )
+            serializer = BookingSerializer(booking)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Booking.DoesNotExist:
+            return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(id=booking_id)
+            serializer = BookingSerializer(booking, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Booking.DoesNotExist:
+            return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)

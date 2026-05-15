@@ -11,37 +11,37 @@ export default function VendorList({ vendors, onBookmarkToggle }) {
         <div
           key={v.id}
           onClick={() => navigate(`/profile/${v.providerId}`)}
-          className="relative bg-white rounded-2xl shadow-md flex p-3 items-center space-x-3 hover:shadow-lg transition-all cursor-pointer"
+          className="relative bg-white rounded-2xl shadow-md flex items-stretch hover:shadow-lg transition-all cursor-pointer overflow-hidden"
         >
-          {/* Bookmark button (top-right) */}
-          <button
-            aria-label={v.bookmarked ? "Remove bookmark" : "Add bookmark"}
-            className="absolute right-3 top-3 p-1 rounded-full hover:bg-gray-100"
-            onClick={(e) => {
-              e.stopPropagation();  // prevent navigating when clicking bookmark
-              onBookmarkToggle?.(v.id);
-            }}
-          >
-            {v.bookmarked ? (
-              <BiSolidBookmarkMinus />
-            ) : (
-              <BiBookmarkMinus />
-            )}
-          </button>
-
-          {/* Placeholder image */}
+          {/* Image - flush left, rounded only on left */}
           {v.image ? (
             <img
               src={v.image}
               alt={v.name}
-              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+              className="w-24 object-cover flex-shrink-0 rounded-l-2xl"
             />
           ) : (
-            <div className="w-16 h-16 bg-gray-300 rounded-lg flex-shrink-0" />
+            <div className="w-24 bg-black flex-shrink-0 rounded-l-2xl" />
           )}
 
           {/* Vendor Info */}
-          <div className="flex-1">
+          <div className="flex-1 p-3">
+            {/* Bookmark button (top-right) */}
+            <button
+              aria-label={v.bookmarked ? "Remove bookmark" : "Add bookmark"}
+              className="absolute right-3 top-3 p-1 rounded-full hover:bg-gray-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                onBookmarkToggle?.(v.id);
+              }}
+            >
+              {v.bookmarked ? (
+                <BiSolidBookmarkMinus />
+              ) : (
+                <BiBookmarkMinus />
+              )}
+            </button>
+
             <p className="text-xs text-red-500 font-semibold">{v.distance}</p>
             <p className="font-semibold text-sm">{v.name}</p>
             <p className="text-sm font-semibold text-gray-800">{v.price}</p>
@@ -53,7 +53,7 @@ export default function VendorList({ vendors, onBookmarkToggle }) {
           </div>
 
           {/* Badge */}
-          <div className="flex items-start">
+          <div className="absolute bottom-3 right-3">
             <div className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md">
               Booked Once
             </div>

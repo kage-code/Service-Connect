@@ -1,34 +1,39 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
-    CardView,
-    ProviderReviewsView,
     RegisterView,
     LoginView,
     ProfileView,
+    UserProfileView,
     VerifyOTPView,
     ForgotPasswordView,
     ResetPasswordView,
     CategoryListView,
-    ServiceListView,ProviderProfileView,BookingListView,BookingDetailView,ReviewView,CardView,EReceiptView,JobListView,ComplaintView  # 👈 add this
+    ServiceListView,
+    ProviderProfileView,
+    BookingListView,
+    BookingDetailView,
+    ReviewView,
+    ProviderReviewsView,
+    CardView,
+    EReceiptView,
+    JobListView,
+    ComplaintView,
+    verify_reset_otp,
 )
-from rest_framework_simplejwt.views import TokenRefreshView
-
-
 
 urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
-
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
-
     path('auth/forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    path('auth/verify-reset-otp/', verify_reset_otp, name='verify-reset-otp'),
     path('auth/reset-password/', ResetPasswordView.as_view(), name='reset-password'),
-
     path('profile/', ProfileView.as_view(), name='profile'),
-    path('services/', ServiceListView.as_view(), name='service-list'),
-    # Categories Endpoint
+    path('user/profile/', UserProfileView.as_view(), name='user-profile'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('services/', ServiceListView.as_view(), name='service-list'),
     path('provider/<int:provider_id>/', ProviderProfileView.as_view(), name='provider-profile'),
     path('bookings/', BookingListView.as_view(), name='booking-list'),
     path('bookings/<int:booking_id>/', BookingDetailView.as_view(), name='booking-detail'),

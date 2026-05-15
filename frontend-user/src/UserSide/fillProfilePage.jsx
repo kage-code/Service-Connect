@@ -1,28 +1,31 @@
 import { useState, useRef } from "react";
 import { FaUserEdit } from "react-icons/fa";
 import { MdEmail, MdDateRange, MdLocationOn } from "react-icons/md";
-import { IoIosArrowBack } from "react-icons/io";
 import Input from "../components/ui/Input";
 import SubmitButton from "../components/ui/SubmitButton";
 import PhoneInputWithCountry from "../components/ui/PhoneInputWithCountry";
 import CommonHeader from "../components/ui/CommonHeader";
+import api from "../api/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 export default function FillProfile() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
-    fullName: "",
-    address: "",
-    dob: "",
-    email: "",
     phone: "",
+    dob: "",
     gender: "",
-    houseName: "",
+    house_name: "",
     landmark: "",
     pincode: "",
     district: "",
     state: "",
+    bio: "",
   });
 
   const [profileImage, setProfileImage] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
   const handleChange = (field) => (e) =>
@@ -31,21 +34,41 @@ export default function FillProfile() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setProfileImage(imageURL);
+      setProfileImage(URL.createObjectURL(file));
+      setProfileImageFile(file);
     }
   };
 
   const handleImageClick = () => fileInputRef.current.click();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form data:", form);
+    setLoading(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (value) formData.append(key, value);
+      });
+      if (profileImageFile) {
+        formData.append("profile_image", profileImageFile);
+      }
+
+      await api.patch("/user/profile/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      navigate("/congrats");
+    } catch (err) {
+      setError("Failed to save profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header */}
       <CommonHeader title="FILL YOUR PROFILE" />
 
       {/* Profile Avatar */}
@@ -61,16 +84,12 @@ export default function FillProfile() {
               <FaUserEdit className="text-3xl text-white opacity-70" />
             )}
           </div>
-
-          {/* Small edit icon */}
           <div
             onClick={handleImageClick}
             className="absolute bottom-1 right-1 bg-white p-1 rounded-full shadow cursor-pointer"
           >
             <FaUserEdit className="text-gray-700 text-sm" />
           </div>
-
-          {/* Hidden file input */}
           <input
             type="file"
             accept="image/*"
@@ -81,18 +100,19 @@ export default function FillProfile() {
         </div>
       </div>
 
+      {error && (
+        <p className="text-center text-red-500 text-sm mt-4">{error}</p>
+      )}
+
       {/* Form */}
       <form
         onSubmit={handleSubmit}
         className="flex justify-center mt-6 px-4 grow overflow-y-auto"
       >
         <div className="w-full max-w-lg flex flex-col gap-3 pb-6">
-          <Input placeholder="Full Name" value={form.fullName} onChange={handleChange("fullName")} />
-          <Input
-            placeholder="Address"
-            value={form.address}
-            onChange={handleChange("address")}
-            icon={MdLocationOn}
+          <PhoneInputWithCountry
+            value={form.phone}
+            onChange={handleChange("phone")}
           />
           <Input
             type="date"
@@ -101,33 +121,20 @@ export default function FillProfile() {
             onChange={handleChange("dob")}
             icon={MdDateRange}
           />
-          <Input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange("email")}
-            icon={MdEmail}
-          />
-          <PhoneInputWithCountry
-            value={form.phone}
-            onChange={handleChange("phone")}
-          />
-
           <select
             value={form.gender}
             onChange={handleChange("gender")}
-            className="bg-[#736A68] text-white px-3 py-4 rounded-md focus:outline-none text-sm w-full max-w-lg mx-auto"
+            className="bg-[#736A68] text-white px-3 py-4 rounded-md focus:outline-none text-sm w-full"
           >
             <option value="">Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
-
           <Input
             placeholder="House Name"
-            value={form.houseName}
-            onChange={handleChange("houseName")}
+            value={form.house_name}
+            onChange={handleChange("house_name")}
           />
           <Input
             placeholder="Landmark"
@@ -150,10 +157,9 @@ export default function FillProfile() {
             onChange={handleChange("state")}
           />
 
-          {/* Continue Button */}
           <div className="mt-6 flex justify-center">
             <SubmitButton className="w-full max-w-lg mx-auto">
-              Continue
+              {loading ? "Saving..." : "Continue"}
             </SubmitButton>
           </div>
         </div>

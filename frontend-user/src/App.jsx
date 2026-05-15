@@ -64,7 +64,8 @@ import AccountsPage from "./AdminPages/AccountPage.jsx";
 import IncomeManagement from "./AdminPages/IncomeManagementPage.jsx";
 import FinancePage from "./AdminPages/FinancePage.jsx";
 import PayoutSchedule from "./AdminPages/PayoutSchedulePage.jsx";
-
+import ServiceStatusPage from "./UserSide/serviceStatusPage.jsx";
+import VerifyOtpReset from "./UserSide/verifyOtpReset.jsx";
 function App() {
   return (
     <Routes>
@@ -117,6 +118,8 @@ function App() {
       <Route path="/message" element={<MessagePage />} />
       <Route path="/invite" element={<InviteFriend />} />
       <Route path="/profile/:providerId" element={<ProfilePage />} />
+      <Route path="/servicestatus" element={<ServiceStatusPage />} />
+      <Route path="/verifyotpreset" element={<VerifyOtpReset />} />
 
       {/* --- Admin Routes --- */}
       <Route path="/admin/generalsettings" element={<AdminGeneralSettings />} />
@@ -128,6 +131,7 @@ function App() {
       <Route path="/admin/income" element={<IncomeManagement />} />
       <Route path="/admin/finance" element={<FinancePage />} />
       <Route path="/admin/payout" element={<PayoutSchedule />} />
+
 
 
       {/* --- 404 --- */}

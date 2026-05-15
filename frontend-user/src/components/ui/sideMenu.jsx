@@ -1,42 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, X } from "lucide-react";
+import api from "../../api/axiosInstance";
 
 export default function SidebarMenu({ onClose }) {
   const navigate = useNavigate();
-  const [activeItem, setActiveItem] = useState("My Profile");
+  const [activeItem, setActiveItem] = useState("Home");
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    api.get("/user/profile/").then((res) => setProfile(res.data)).catch(() => { });
+  }, []);
 
   const menuItems = [
-    "My Profile",
-    "Home",
-    "Bookings",
-    "Active Services",
-    "Services",
-    "Complaints",
-    "Message",
-    "Settings",
-    "Transaction",
-    "History",
-    "Help Center",
-    "Terms & Conditions",
-    "About Us",
-    "Invite a Friend",
+    { label: "My Profile", path: "/profile" },
+    { label: "Home", path: "/home" },
+    { label: "Bookings", path: "/bookingpage" },
+    { label: "Active Services", path: "/servicestatus" },
+    { label: "Services", path: "/servicespage" },
+    { label: "Complaints", path: "/complaintpage" },
+    { label: "Message", path: "/message" },
+    { label: "Settings", path: "/settings" },
+    { label: "Transaction", path: "/transactionpage" },
+    { label: "Help Center", path: "/help" },
+    { label: "Terms & Conditions", path: "/terms" },
+    { label: "About Us", path: "/about" },
+    { label: "Invite a Friend", path: "/invite" },
   ];
 
   const handleClick = (item) => {
-    setActiveItem(item);
-    if (item === "My Profile") navigate("/profile");
-    else if (item === "Settings") navigate("/settings");
-    else if (item === "Bookings") navigate("/bookingpage");
-    else if (item === "Services") navigate("/servicepage");
-    else if (item === "Complaints") navigate("/complaintpage");
-    else if (item === "Terms & Conditions") navigate("/terms");
-    else if (item === "About Us") navigate("/about");
-    else if (item === "Help Center") navigate("/help");
-    else if (item === "Transaction") navigate("/transactionpage");
-    else if (item === "Message") navigate("/chatcall");
-    else if (item === "Invite a Friend") navigate("/invite");
-    else navigate(`/${item.toLowerCase().replace(/ /g, "")}`);
+    setActiveItem(item.label);
+    navigate(item.path);
+    onClose?.();
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+    onClose?.();
   };
 
   return (
@@ -53,15 +54,19 @@ export default function SidebarMenu({ onClose }) {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img
-                src="/profile.png"
+                src={
+                  profile?.profile_image
+                    ? `http://127.0.0.1:8000${profile.profile_image}`
+                    : "/profile.png"
+                }
                 alt="profile"
-                className="w-12 h-12 rounded-full border-2 border-white"
+                className="w-12 h-12 rounded-full border-2 border-white object-cover"
               />
               <span className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full border border-white" />
             </div>
             <div>
-              <p className="font-semibold text-red-400">Stone Stellar</p>
-              <p className="text-yellow-400 text-sm">UID: CU102</p>
+              <p className="font-semibold text-white">{profile?.full_name || "User"}</p>
+              <p className="text-yellow-400 text-sm">{profile?.email || ""}</p>
               <p className="text-green-400 text-sm">Online</p>
             </div>
           </div>
@@ -74,25 +79,24 @@ export default function SidebarMenu({ onClose }) {
         </div>
 
         {/* Menu */}
-        <div className="flex flex-col gap-2 mt-2 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-1 mt-2 max-h-[70vh] overflow-y-auto pr-1">
           {menuItems.map((item) => (
             <button
-              key={item}
+              key={item.label}
               onClick={() => handleClick(item)}
-              className={`text-left px-4 py-2 rounded-md transition-all ${
-                activeItem === item
-                  ? "bg-white text-gray-900 font-semibold"
-                  : "hover:bg-white/20"
-              }`}
+              className={`text-left px-4 py-2 rounded-md transition-all ${activeItem === item.label
+                ? "bg-white text-gray-900 font-semibold"
+                : "hover:bg-white/20"
+                }`}
             >
-              {item}
+              {item.label}
             </button>
           ))}
         </div>
 
         {/* Logout */}
         <button
-          onClick={() => console.log("Logout")}
+          onClick={handleLogout}
           className="flex items-center gap-2 mt-6 text-white/80 hover:text-white px-4"
         >
           <LogOut className="w-4 h-4" />

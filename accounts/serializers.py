@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import CustomUser, Category , Service # Added Category import
+from .models import (
+    CustomUser, Category, Service, ProviderProfile,
+    Booking, Review, Card, Complaint, UserProfile
+)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -18,27 +21,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-from .models import CustomUser, Category, Service, ProviderProfile
-
-class ProviderProfileSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source='user.full_name', read_only=True)
-    email = serializers.CharField(source='user.email', read_only=True)
-
-    class Meta:
-        model = ProviderProfile
-        fields = ['id', 'full_name', 'email', 'business_name', 'location', 'profile_image', 'bio', 'is_verified']
-
-class ServiceSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    provider_name = serializers.CharField(source='provider.user.full_name', read_only=True)
-    provider_business = serializers.CharField(source='provider.business_name', read_only=True)
-    provider_location = serializers.CharField(source='provider.location', read_only=True)
-    provider_image = serializers.ImageField(source='provider.profile_image', read_only=True)
-
-    class Meta:
-        model = Service
-        fields = ['id', 'name', 'description', 'min_price', 'max_price', 'is_free', 'rating', 'duration', 'image', 'category', 'category_name', 'provider', 'provider_name', 'provider_business', 'provider_location', 'provider_image', 'created_at']
-# --- NEW SERIALIZER ADDED BELOW ---
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
@@ -49,7 +31,33 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def get_subcategories(self, obj):
         return CategorySerializer(obj.subcategories.all(), many=True).data
-from .models import CustomUser, Category, Service, ProviderProfile, Booking
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    provider_name = serializers.CharField(source='provider.user.full_name', read_only=True)
+    provider_business = serializers.CharField(source='provider.business_name', read_only=True)
+    provider_location = serializers.CharField(source='provider.location', read_only=True)
+    provider_image = serializers.ImageField(source='provider.profile_image', read_only=True)
+
+    class Meta:
+        model = Service
+        fields = [
+            'id', 'name', 'description', 'min_price', 'max_price', 'is_free',
+            'rating', 'duration', 'image', 'category', 'category_name',
+            'provider', 'provider_name', 'provider_business',
+            'provider_location', 'provider_image', 'created_at'
+        ]
+
+
+class ProviderProfileSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = ProviderProfile
+        fields = ['id', 'full_name', 'email', 'business_name', 'location', 'profile_image', 'bio', 'is_verified']
+
 
 class BookingSerializer(serializers.ModelSerializer):
     provider_name = serializers.CharField(source='provider.business_name', read_only=True)
@@ -58,9 +66,12 @@ class BookingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ['id', 'title', 'description', 'status', 'amount', 'note', 'from_date', 'to_date', 'provider', 'provider_name', 'client', 'client_name', 'service', 'service_name', 'created_at']
+        fields = [
+            'id', 'title', 'description', 'status', 'amount', 'note',
+            'from_date', 'to_date', 'provider', 'provider_name',
+            'client', 'client_name', 'service', 'service_name', 'created_at'
+        ]
 
-from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.full_name', read_only=True)
@@ -69,15 +80,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['id', 'booking', 'client', 'client_name', 'client_image', 'provider', 'rating', 'comment', 'image', 'created_at']
-    
-from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review, Card
+
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
         fields = ['id', 'card_name', 'card_number', 'expiry_date', 'created_at']
 
-from .models import CustomUser, Category, Service, ProviderProfile, Booking, Review, Card, Complaint
 
 class ComplaintSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.full_name', read_only=True)
@@ -88,4 +97,21 @@ class ComplaintSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Complaint
-        fields = ['id', 'booking', 'client', 'client_name', 'title', 'description', 'image', 'status', 'booking_amount', 'booking_from_date', 'booking_to_date', 'provider_name', 'created_at']
+        fields = [
+            'id', 'booking', 'client', 'client_name', 'title', 'description',
+            'image', 'status', 'booking_amount', 'booking_from_date',
+            'booking_to_date', 'provider_name', 'created_at'
+        ]
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'full_name', 'email', 'bio', 'profile_image',
+            'phone', 'dob', 'gender', 'house_name', 'landmark',
+            'pincode', 'district', 'state'
+        ]
